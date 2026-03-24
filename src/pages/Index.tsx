@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { generateGames, fetchLatestDraw, checkGame, type Game, type DrawResult } from "@/lib/lotofacil";
+import { generateGames, fetchLatestDraw, checkGame, parseMotor, validateMotor, ROWS, type Game, type DrawResult } from "@/lib/lotofacil";
 import GameCard, { getPrizeValue } from "@/components/GameCard";
 import LotteryBall from "@/components/LotteryBall";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dices, Search, Loader2, Clover, Trophy, Banknote } from "lucide-react";
+import { Dices, Search, Loader2, Clover, Trophy, Banknote, Cpu } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -18,12 +20,29 @@ const Index = () => {
   const [draw, setDraw] = useState<DrawResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [useMotor, setUseMotor] = useState(false);
+  const [motorInput, setMotorInput] = useState("3x5x4x1x2");
+
+  const motorParsed = useMemo(() => parseMotor(motorInput), [motorInput]);
+  const motorValid = useMemo(() => motorParsed ? validateMotor(motorParsed, numbersPerGame) : false, [motorParsed, numbersPerGame]);
+  const motorSum = motorParsed ? motorParsed.reduce((a, b) => a + b, 0) : 0;
 
   const handleGenerate = () => {
-    const newGames = generateGames(gameCount, numbersPerGame);
-    setGames(newGames);
-    setDraw(null);
-    toast({ title: `${gameCount} jogo(s) gerado(s)!`, description: `${numbersPerGame} números por jogo` });
+    if (useMotor) {
+      if (!motorParsed || !motorValid) {
+        toast({ title: "Motor inválido!", description: `A soma deve ser ${numbersPerGame}. Atual: ${motorSum}`, variant: "destructive" });
+        return;
+      }
+      const newGames = generateGames(gameCount, numbersPerGame, motorParsed);
+      setGames(newGames);
+      setDraw(null);
+      toast({ title: `${gameCount} jogo(s) com motor IA!`, description: `Padrão: ${motorInput}` });
+    } else {
+      const newGames = generateGames(gameCount, numbersPerGame);
+      setGames(newGames);
+      setDraw(null);
+      toast({ title: `${gameCount} jogo(s) gerado(s)!`, description: `${numbersPerGame} números por jogo` });
+    }
   };
 
   const handleCheck = async () => {
