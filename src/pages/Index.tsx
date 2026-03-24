@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { generateGames, fetchLatestDraw, checkGame, parseMotor, validateMotor, ROWS, type Game, type DrawResult } from "@/lib/lotofacil";
+import { generateGames, fetchLatestDraw, checkGame, parseMotor, motorTotal, ROWS, type Game, type DrawResult } from "@/lib/lotofacil";
 import GameCard, { getPrizeValue } from "@/components/GameCard";
 import LotteryBall from "@/components/LotteryBall";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,19 +24,23 @@ const Index = () => {
   const [motorInput, setMotorInput] = useState("3x5x4x1x2");
 
   const motorParsed = useMemo(() => parseMotor(motorInput), [motorInput]);
-  const motorValid = useMemo(() => motorParsed ? validateMotor(motorParsed, numbersPerGame) : false, [motorParsed, numbersPerGame]);
-  const motorSum = motorParsed ? motorParsed.reduce((a, b) => a + b, 0) : 0;
+  const motorSum = motorParsed ? motorTotal(motorParsed) : 0;
+  const effectiveNumbers = useMotor && motorParsed ? motorSum : numbersPerGame;
 
   const handleGenerate = () => {
     if (useMotor) {
-      if (!motorParsed || !motorValid) {
-        toast({ title: "Motor inválido!", description: `A soma deve ser ${numbersPerGame}. Atual: ${motorSum}`, variant: "destructive" });
+      if (!motorParsed) {
+        toast({ title: "Motor inválido!", description: "Use o formato NxNxNxNxN", variant: "destructive" });
         return;
       }
-      const newGames = generateGames(gameCount, numbersPerGame, motorParsed);
+      if (motorSum < 15 || motorSum > 20) {
+        toast({ title: "Quantidade inválida!", description: `A soma deve ser entre 15 e 20. Atual: ${motorSum}`, variant: "destructive" });
+        return;
+      }
+      const newGames = generateGames(gameCount, motorSum, motorParsed);
       setGames(newGames);
       setDraw(null);
-      toast({ title: `${gameCount} jogo(s) com motor IA!`, description: `Padrão: ${motorInput}` });
+      toast({ title: `${gameCount} jogo(s) com motor IA!`, description: `Padrão: ${motorInput} (${motorSum} números)` });
     } else {
       const newGames = generateGames(gameCount, numbersPerGame);
       setGames(newGames);
@@ -162,7 +166,7 @@ const Index = () => {
                     placeholder="Ex: 3x5x4x1x2"
                     className={`font-mono text-center text-lg ${
                       motorParsed
-                        ? motorValid
+                        ? motorSum >= 15 && motorSum <= 20
                           ? "border-primary/50 focus-visible:ring-primary"
                           : "border-destructive/50 focus-visible:ring-destructive"
                         : "border-destructive/50"
@@ -181,9 +185,9 @@ const Index = () => {
                       </div>
                     ))}
                   </div>
-                  <div className={`text-xs text-center font-medium ${motorValid ? "text-primary" : "text-destructive"}`}>
-                    Soma: {motorSum} / {numbersPerGame}
-                    {!motorValid && motorParsed && ` — ajuste para ${numbersPerGame}`}
+                  <div className={`text-xs text-center font-medium ${motorParsed && motorSum >= 15 && motorSum <= 20 ? "text-primary" : "text-destructive"}`}>
+                    Soma: {motorSum} números
+                    {motorParsed && (motorSum < 15 || motorSum > 20) && " — deve ser entre 15 e 20"}
                     {!motorParsed && " — formato inválido (use NxNxNxNxN)"}
                   </div>
                 </motion.div>
