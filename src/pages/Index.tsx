@@ -46,6 +46,21 @@ const Index = () => {
 
   const resultNumbers = draw ? draw.dezenas.map(Number) : undefined;
 
+  const totalPrize = useMemo(() => {
+    if (!resultNumbers) return 0;
+    return games.reduce((sum, game) => {
+      const { matches } = checkGame(game, resultNumbers);
+      return sum + getPrizeValue(matches);
+    }, 0);
+  }, [games, resultNumbers]);
+
+  const betCost = useMemo(() => {
+    const costs: Record<number, number> = { 15: 3, 16: 48, 17: 408, 18: 2448, 19: 11628, 20: 46512 };
+    return (costs[numbersPerGame] || 3) * games.length;
+  }, [numbersPerGame, games.length]);
+
+  const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
