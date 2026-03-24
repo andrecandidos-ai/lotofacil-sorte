@@ -16,13 +16,12 @@ export const ROWS = [
 export function parseMotor(motor: string): number[] | null {
   const parts = motor.split("x").map(Number);
   if (parts.length !== 5 || parts.some(isNaN)) return null;
-  if (parts.some((p, i) => p < 0 || p > ROWS[i].length)) return null;
+  if (parts.some(p => p < 0)) return null;
   return parts;
 }
 
-export function validateMotor(motor: number[], numbersPerGame: number): boolean {
-  const total = motor.reduce((a, b) => a + b, 0);
-  return total === numbersPerGame;
+export function motorTotal(motor: number[]): number {
+  return motor.reduce((a, b) => a + b, 0);
 }
 
 function shuffle<T>(arr: T[]): T[] {

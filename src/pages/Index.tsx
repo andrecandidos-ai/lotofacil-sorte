@@ -24,19 +24,23 @@ const Index = () => {
   const [motorInput, setMotorInput] = useState("3x5x4x1x2");
 
   const motorParsed = useMemo(() => parseMotor(motorInput), [motorInput]);
-  const motorValid = useMemo(() => motorParsed ? validateMotor(motorParsed, numbersPerGame) : false, [motorParsed, numbersPerGame]);
-  const motorSum = motorParsed ? motorParsed.reduce((a, b) => a + b, 0) : 0;
+  const motorSum = motorParsed ? motorTotal(motorParsed) : 0;
+  const effectiveNumbers = useMotor && motorParsed ? motorSum : numbersPerGame;
 
   const handleGenerate = () => {
     if (useMotor) {
-      if (!motorParsed || !motorValid) {
-        toast({ title: "Motor inválido!", description: `A soma deve ser ${numbersPerGame}. Atual: ${motorSum}`, variant: "destructive" });
+      if (!motorParsed) {
+        toast({ title: "Motor inválido!", description: "Use o formato NxNxNxNxN", variant: "destructive" });
         return;
       }
-      const newGames = generateGames(gameCount, numbersPerGame, motorParsed);
+      if (motorSum < 15 || motorSum > 20) {
+        toast({ title: "Quantidade inválida!", description: `A soma deve ser entre 15 e 20. Atual: ${motorSum}`, variant: "destructive" });
+        return;
+      }
+      const newGames = generateGames(gameCount, motorSum, motorParsed);
       setGames(newGames);
       setDraw(null);
-      toast({ title: `${gameCount} jogo(s) com motor IA!`, description: `Padrão: ${motorInput}` });
+      toast({ title: `${gameCount} jogo(s) com motor IA!`, description: `Padrão: ${motorInput} (${motorSum} números)` });
     } else {
       const newGames = generateGames(gameCount, numbersPerGame);
       setGames(newGames);
