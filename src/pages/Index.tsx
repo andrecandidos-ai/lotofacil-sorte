@@ -20,7 +20,7 @@ import {
 import GameCard, { getPrizeValue } from "@/components/GameCard";
 import LotteryBall from "@/components/LotteryBall";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dices, Search, Loader2, Clover, Trophy, Banknote, Cpu, Brain, TrendingUp, Flame, Snowflake } from "lucide-react";
+import { Dices, Search, Loader2, Clover, Trophy, Banknote, Brain, TrendingUp, Flame, Snowflake } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
