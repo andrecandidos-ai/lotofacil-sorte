@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { generateGames, fetchLatestDraw, type Game, type DrawResult } from "@/lib/lotofacil";
-import GameCard from "@/components/GameCard";
+import { generateGames, fetchLatestDraw, checkGame, type Game, type DrawResult } from "@/lib/lotofacil";
+import GameCard, { getPrizeValue } from "@/components/GameCard";
+import LotteryBall from "@/components/LotteryBall";
+import { motion, AnimatePresence } from "framer-motion";
+import { Dices, Search, Loader2, Clover, Trophy, Banknote } from "lucide-react";
 import LotteryBall from "@/components/LotteryBall";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dices, Search, Loader2, Clover, Trophy } from "lucide-react";
