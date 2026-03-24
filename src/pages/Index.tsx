@@ -12,7 +12,7 @@ import {
   analyzeDraws,
   generateSmartGames,
   checkGame,
-  ROWS,
+  
   type Game,
   type DrawResult,
   type MotorAnalysis,
