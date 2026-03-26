@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -57,10 +57,15 @@ const Index = () => {
       const next = new Set(prev);
       if (next.has(motor)) next.delete(motor);
       else next.add(motor);
-      if (next.size > 0 && !analysis) loadAnalysis();
       return next;
     });
   };
+
+  useEffect(() => {
+    if (selectedMotors.size > 0 && !analysis && !motorLoading) {
+      loadAnalysis();
+    }
+  }, [selectedMotors, analysis, motorLoading]);
 
   const loadAnalysis = async () => {
     setMotorLoading(true);
