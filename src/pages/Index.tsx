@@ -136,7 +136,7 @@ const Index = () => {
   }, [games, resultNumbers]);
 
   const betCost = useMemo(() => {
-    const costs: Record<number, number> = { 15: 3, 16: 48, 17: 408, 18: 2448, 19: 11628, 20: 46512 };
+    const costs: Record<number, number> = { 15: 3.5, 16: 56, 17: 476, 18: 2856, 19: 13566, 20: 54264 };
     return (costs[numbersPerGame] || 3) * games.length;
   }, [numbersPerGame, games.length]);
 
