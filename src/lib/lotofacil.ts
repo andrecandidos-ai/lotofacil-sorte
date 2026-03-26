@@ -849,7 +849,9 @@ export function generateGaussGame(analysis: GaussAnalysis, count: number): Game 
     const lsFit = leastSquaresFit[i - 1] || 0;
     const inConfidence = confidenceIntervals.find(ci => ci.num === i && i >= ci.lower && i <= ci.upper) ? 1.2 : 1.0;
 
-    const weight = normal * (lsFit + 1) * inConfidence;
+    const baseWeight = normal * (lsFit + 1) * inConfidence;
+    const randomFactor = 0.5 + Math.random();
+    const weight = baseWeight * randomFactor;
     weights.push({ num: i, weight });
   }
 
@@ -885,7 +887,9 @@ export function generateFibonacciGame(analysis: FibonacciAnalysis, count: number
     const spiral = spiralPositions[i - 1] || 1;
     const harmonic = phiHarmonics[i] || 0.1;
 
-    const weight = golden * (1 / spiral) * harmonic * 100; // Scale up harmonics
+    const baseWeight = golden * (1 / spiral) * harmonic * 100; // Scale up harmonics
+    const randomFactor = 0.5 + Math.random();
+    const weight = baseWeight * randomFactor;
     weights.push({ num: i, weight });
   }
 
@@ -921,7 +925,9 @@ export function generateTuringGame(analysis: TuringAnalysis, count: number): Gam
     const halt = haltingProbabilities[i] || 0.5;
     const alg = algorithmicComplexity[i] || 1;
 
-    const weight = comp * halt * (1 / alg); // Lower complexity = higher weight
+    const baseWeight = comp * halt * (1 / alg); // Lower complexity = higher weight
+    const randomFactor = 0.5 + Math.random();
+    const weight = baseWeight * randomFactor;
     weights.push({ num: i, weight });
   }
 
@@ -968,6 +974,9 @@ export function generatePythagorasGame(analysis: PythagorasAnalysis, count: numb
     // Geometric and harmonic factors
     weight *= geometricRatios[i] || 1.0;
     weight *= harmonicSeries[i] || 1.0;
+
+    const randomFactor = 0.5 + Math.random();
+    weight *= randomFactor;
 
     weights.push({ num: i, weight });
   }

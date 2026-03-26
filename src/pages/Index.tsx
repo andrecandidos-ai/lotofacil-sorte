@@ -82,9 +82,11 @@ const Index = () => {
       setTuringAnalysis(newTuring);
       setPythagorasAnalysis(newPythagoras);
       toast({ title: "🧠 Análise atualizada!", description: `Concursos ${draws[0].concurso}–${draws[draws.length - 1].concurso}` });
+      return { a: newAnalysis, e: newEinstein, g: newGauss, f: newFibonacci, t: newTuring, p: newPythagoras };
     } catch (error) {
       console.error("Erro loadAnalysis", error);
       toast({ title: "Erro ao analisar concursos", variant: "destructive" });
+      return null;
     } finally {
       setMotorLoading(false);
     }
@@ -102,10 +104,6 @@ const Index = () => {
     if (hasPreditivo || hasEinstein || hasGauss || hasFibonacci || hasTuring || hasPythagoras) {
       setMotorLoading(true);
       try {
-        if (!analysis || !einsteinAnalysis || !gaussAnalysis || !fibonacciAnalysis || !turingAnalysis || !pythagorasAnalysis) {
-          await loadAnalysis();
-        }
-
         let a = analysis;
         let e = einsteinAnalysis;
         let g = gaussAnalysis;
@@ -115,18 +113,17 @@ const Index = () => {
 
         if (!a || !e || !g || !f || !t || !p) {
           toast({ title: "🧠 Analisando últimos 5 concursos..." });
-          a = analysis || (await fetchLast5Draws().then((draws) => analyzeDraws(draws)));
-          e = einsteinAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsEinstein(draws)));
-          g = gaussAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsGauss(draws)));
-          f = fibonacciAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsFibonacci(draws)));
-          t = turingAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsTuring(draws)));
-          p = pythagorasAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsPythagoras(draws)));
-          setAnalysis(a);
-          setEinsteinAnalysis(e);
-          setGaussAnalysis(g);
-          setFibonacciAnalysis(f);
-          setTuringAnalysis(t);
-          setPythagorasAnalysis(p);
+          const result = await loadAnalysis();
+          if (result) {
+            a = result.a;
+            e = result.e;
+            g = result.g;
+            f = result.f;
+            t = result.t;
+            p = result.p;
+          } else {
+            throw new Error("Falha no carregamento da análise.");
+          }
         }
 
         let newGames: Game[];
