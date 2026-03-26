@@ -51,7 +51,6 @@ const Index = () => {
   const [fibonacciAnalysis, setFibonacciAnalysis] = useState<FibonacciAnalysis | null>(null);
   const [turingAnalysis, setTuringAnalysis] = useState<TuringAnalysis | null>(null);
   const [pythagorasAnalysis, setPythagorasAnalysis] = useState<PythagorasAnalysis | null>(null);
-  const [analysisLoaded, setAnalysisLoaded] = useState(false);
 
   const toggleMotor = (motor: string) => {
     setSelectedMotors(prev => {
@@ -63,14 +62,11 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (selectedMotors.size > 0 && !analysisLoaded && !motorLoading) {
-      loadAnalysis();
-    }
-  }, [selectedMotors, analysisLoaded, motorLoading]);
+    // Mantemos este gancho apenas para o caso de novas atualizações automáticas no futuro.
+  }, []);
 
   const loadAnalysis = async () => {
     setMotorLoading(true);
-    setAnalysisLoaded(false);
     try {
       const draws = await fetchLast5Draws();
       const newAnalysis = analyzeDraws(draws);
@@ -86,14 +82,14 @@ const Index = () => {
       setTuringAnalysis(newTuring);
       setPythagorasAnalysis(newPythagoras);
       toast({ title: "🧠 Análise atualizada!", description: `Concursos ${draws[0].concurso}–${draws[draws.length - 1].concurso}` });
-      setAnalysisLoaded(true);
-    } catch {
+    } catch (error) {
+      console.error("Erro loadAnalysis", error);
       toast({ title: "Erro ao analisar concursos", variant: "destructive" });
-      setAnalysisLoaded(true); // evita loop infinito caso falhe
     } finally {
       setMotorLoading(false);
     }
   };
+
 
   const handleGenerate = async () => {
     const hasPreditivo = selectedMotors.has("preditivo");
@@ -106,6 +102,10 @@ const Index = () => {
     if (hasPreditivo || hasEinstein || hasGauss || hasFibonacci || hasTuring || hasPythagoras) {
       setMotorLoading(true);
       try {
+        if (!analysis || !einsteinAnalysis || !gaussAnalysis || !fibonacciAnalysis || !turingAnalysis || !pythagorasAnalysis) {
+          await loadAnalysis();
+        }
+
         let a = analysis;
         let e = einsteinAnalysis;
         let g = gaussAnalysis;
@@ -115,13 +115,12 @@ const Index = () => {
 
         if (!a || !e || !g || !f || !t || !p) {
           toast({ title: "🧠 Analisando últimos 5 concursos..." });
-          const draws = await fetchLast5Draws();
-          a = analyzeDraws(draws);
-          e = analyzeDrawsEinstein(draws);
-          g = analyzeDrawsGauss(draws);
-          f = analyzeDrawsFibonacci(draws);
-          t = analyzeDrawsTuring(draws);
-          p = analyzeDrawsPythagoras(draws);
+          a = analysis || (await fetchLast5Draws().then((draws) => analyzeDraws(draws)));
+          e = einsteinAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsEinstein(draws)));
+          g = gaussAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsGauss(draws)));
+          f = fibonacciAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsFibonacci(draws)));
+          t = turingAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsTuring(draws)));
+          p = pythagorasAnalysis || (await fetchLast5Draws().then((draws) => analyzeDrawsPythagoras(draws)));
           setAnalysis(a);
           setEinsteinAnalysis(e);
           setGaussAnalysis(g);
