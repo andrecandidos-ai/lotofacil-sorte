@@ -51,6 +51,7 @@ const Index = () => {
   const [fibonacciAnalysis, setFibonacciAnalysis] = useState<FibonacciAnalysis | null>(null);
   const [turingAnalysis, setTuringAnalysis] = useState<TuringAnalysis | null>(null);
   const [pythagorasAnalysis, setPythagorasAnalysis] = useState<PythagorasAnalysis | null>(null);
+  const [analysisLoaded, setAnalysisLoaded] = useState(false);
 
   const toggleMotor = (motor: string) => {
     setSelectedMotors(prev => {
@@ -62,13 +63,14 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (selectedMotors.size > 0 && !analysis && !motorLoading) {
+    if (selectedMotors.size > 0 && !analysisLoaded && !motorLoading) {
       loadAnalysis();
     }
-  }, [selectedMotors, analysis, motorLoading]);
+  }, [selectedMotors, analysisLoaded, motorLoading]);
 
   const loadAnalysis = async () => {
     setMotorLoading(true);
+    setAnalysisLoaded(false);
     try {
       const draws = await fetchLast5Draws();
       const newAnalysis = analyzeDraws(draws);
@@ -84,8 +86,10 @@ const Index = () => {
       setTuringAnalysis(newTuring);
       setPythagorasAnalysis(newPythagoras);
       toast({ title: "🧠 Análise atualizada!", description: `Concursos ${draws[0].concurso}–${draws[draws.length - 1].concurso}` });
+      setAnalysisLoaded(true);
     } catch {
       toast({ title: "Erro ao analisar concursos", variant: "destructive" });
+      setAnalysisLoaded(true); // evita loop infinito caso falhe
     } finally {
       setMotorLoading(false);
     }
