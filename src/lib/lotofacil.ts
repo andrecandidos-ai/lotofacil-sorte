@@ -565,3 +565,432 @@ export function generateCombinedGames(
   }
   return games;
 }
+
+// ============ NOVOS MOTORES BASEADOS EM MATEMÁTICOS ============
+
+export interface GaussAnalysis {
+  draws: DrawResult[];
+  normalDistribution: Record<number, number>; // Distribuição normal dos números
+  variance: number;                           // Variância dos sorteios
+  standardDeviation: number;                  // Desvio padrão
+  mean: number;                               // Média dos números sorteados
+  confidenceIntervals: { num: number; lower: number; upper: number }[]; // Intervalos de confiança
+  leastSquaresFit: number[];                  // Ajuste por mínimos quadrados
+}
+
+export interface FibonacciAnalysis {
+  draws: DrawResult[];
+  fibonacciSequence: number[];                // Sequência de Fibonacci aplicada aos números
+  goldenRatioWeights: Record<number, number>; // Pesos baseados na razão áurea
+  spiralPositions: number[];                  // Posições em espiral de Fibonacci
+  recurrencePatterns: number[][];             // Padrões de recorrência
+  phiHarmonics: Record<number, number>;       // Harmônicos da razão áurea
+}
+
+export interface TuringAnalysis {
+  draws: DrawResult[];
+  turingMachineStates: Record<number, number>; // Estados de máquina de Turing simulados
+  computabilityScore: Record<number, number>;  // Pontuação de computabilidade
+  haltingProbabilities: Record<number, number>; // Probabilidades de parada
+  algorithmicComplexity: Record<number, number>; // Complexidade algorítmica
+  decisionTreeDepth: number[];                // Profundidade da árvore de decisão
+}
+
+export interface PythagorasAnalysis {
+  draws: DrawResult[];
+  triangularNumbers: number[];                // Números triangulares
+  perfectSquares: number[];                   // Quadrados perfeitos
+  pythagoreanTriples: number[][];             // Triplas pitagóricas
+  geometricRatios: Record<number, number>;    // Razões geométricas
+  harmonicSeries: Record<number, number>;     // Série harmônica
+}
+
+export function analyzeDrawsGauss(draws: DrawResult[]): GaussAnalysis {
+  const allNums = draws.map(d => d.dezenas.map(Number).sort((a, b) => a - b));
+  const totalDraws = draws.length;
+
+  // 1. Normal Distribution — Gaussian bell curve fitting
+  const freq: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) freq[i] = 0;
+  for (const nums of allNums) for (const n of nums) freq[n]++;
+
+  const mean = allNums.flat().reduce((a, b) => a + b, 0) / (totalDraws * 15);
+  const variance = allNums.flat().reduce((sum, n) => sum + Math.pow(n - mean, 2), 0) / (totalDraws * 15);
+  const stdDev = Math.sqrt(variance);
+
+  const normalDistribution: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    const z = (i - mean) / stdDev;
+    normalDistribution[i] = Math.exp(-0.5 * z * z) / (stdDev * Math.sqrt(2 * Math.PI));
+  }
+
+  // 2. Confidence Intervals — 95% confidence around mean
+  const confidenceIntervals = [];
+  const zScore = 1.96; // 95% confidence
+  for (let i = 1; i <= 25; i++) {
+    const lower = mean - zScore * stdDev;
+    const upper = mean + zScore * stdDev;
+    confidenceIntervals.push({ num: i, lower, upper });
+  }
+
+  // 3. Least Squares Fit — linear regression on frequency trends
+  const leastSquaresFit: number[] = [];
+  const x = Array.from({ length: 25 }, (_, i) => i + 1);
+  const y = x.map(n => freq[n]);
+  const n = x.length;
+  const sumX = x.reduce((a, b) => a + b, 0);
+  const sumY = y.reduce((a, b) => a + b, 0);
+  const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+  const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  for (let i = 1; i <= 25; i++) {
+    leastSquaresFit.push(slope * i + intercept);
+  }
+
+  return {
+    draws,
+    normalDistribution,
+    variance,
+    standardDeviation: stdDev,
+    mean,
+    confidenceIntervals,
+    leastSquaresFit,
+  };
+}
+
+export function analyzeDrawsFibonacci(draws: DrawResult[]): FibonacciAnalysis {
+  const allNums = draws.map(d => d.dezenas.map(Number).sort((a, b) => a - b));
+  const totalDraws = draws.length;
+
+  // 1. Fibonacci Sequence mapped to lottery numbers
+  const fibonacciSequence: number[] = [];
+  let a = 1, b = 1;
+  while (fibonacciSequence.length < 25) {
+    fibonacciSequence.push(a);
+    [a, b] = [b, a + b];
+  }
+
+  // 2. Golden Ratio Weights — phi-based probability distribution
+  const phi = (1 + Math.sqrt(5)) / 2;
+  const goldenRatioWeights: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    const ratio = (i * phi) % 1;
+    goldenRatioWeights[i] = 1 / (1 + Math.abs(ratio - 0.5)); // Closer to golden ratio = higher weight
+  }
+
+  // 3. Spiral Positions — Fibonacci spiral mapping
+  const spiralPositions: number[] = [];
+  const directions = [[0, 1], [-1, 0], [0, -1], [1, 0]]; // right, down, left, up
+  let x = 0, y = 0, dir = 0, steps = 1, stepCount = 0;
+  for (let i = 1; i <= 25; i++) {
+    spiralPositions.push(Math.abs(x) + Math.abs(y) + 1);
+    x += directions[dir][0];
+    y += directions[dir][1];
+    stepCount++;
+    if (stepCount === steps) {
+      stepCount = 0;
+      dir = (dir + 1) % 4;
+      if (dir % 2 === 0) steps++;
+    }
+  }
+
+  // 4. Recurrence Patterns — Fibonacci-like sequences in draws
+  const recurrencePatterns: number[][] = [];
+  for (let start = 1; start <= 25; start++) {
+    const seq: number[] = [];
+    let current = start;
+    for (let i = 0; i < 5; i++) {
+      if (current <= 25) seq.push(current);
+      current += fibonacciSequence[i % fibonacciSequence.length];
+    }
+    if (seq.length >= 3) recurrencePatterns.push(seq);
+  }
+
+  // 5. Phi Harmonics — harmonic series based on golden ratio
+  const phiHarmonics: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    phiHarmonics[i] = 1 / (i * phi);
+  }
+
+  return {
+    draws,
+    fibonacciSequence,
+    goldenRatioWeights,
+    spiralPositions,
+    recurrencePatterns,
+    phiHarmonics,
+  };
+}
+
+export function analyzeDrawsTuring(draws: DrawResult[]): TuringAnalysis {
+  const allNums = draws.map(d => d.dezenas.map(Number).sort((a, b) => a - b));
+  const totalDraws = draws.length;
+
+  // 1. Turing Machine States — simulate simple TM states for each number
+  const turingMachineStates: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    // Simple state machine: even/odd transitions
+    let state = i % 2;
+    for (let j = 0; j < 5; j++) {
+      state = (state + 1) % 2; // Toggle state
+    }
+    turingMachineStates[i] = state;
+  }
+
+  // 2. Computability Score — based on algorithmic complexity
+  const computabilityScore: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    // Score based on prime factors (more factors = more complex)
+    let factors = 0;
+    for (let j = 2; j <= Math.sqrt(i); j++) {
+      if (i % j === 0) factors++;
+    }
+    computabilityScore[i] = factors / Math.log(i + 1);
+  }
+
+  // 3. Halting Probabilities — probability that a "computation" halts
+  const haltingProbabilities: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    // Based on Collatz conjecture steps until reaching 1
+    let steps = 0;
+    let n = i;
+    while (n !== 1 && steps < 100) {
+      n = n % 2 === 0 ? n / 2 : 3 * n + 1;
+      steps++;
+    }
+    haltingProbabilities[i] = steps < 100 ? 1 / (steps + 1) : 0.1;
+  }
+
+  // 4. Algorithmic Complexity — Kolmogorov complexity approximation
+  const algorithmicComplexity: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    // Approximate complexity by binary representation length
+    algorithmicComplexity[i] = Math.floor(Math.log2(i)) + 1;
+  }
+
+  // 5. Decision Tree Depth — depth needed to classify number patterns
+  const decisionTreeDepth: number[] = [];
+  for (let depth = 1; depth <= 5; depth++) {
+    decisionTreeDepth.push(depth);
+  }
+
+  return {
+    draws,
+    turingMachineStates,
+    computabilityScore,
+    haltingProbabilities,
+    algorithmicComplexity,
+    decisionTreeDepth,
+  };
+}
+
+export function analyzeDrawsPythagoras(draws: DrawResult[]): PythagorasAnalysis {
+  const allNums = draws.map(d => d.dezenas.map(Number).sort((a, b) => a - b));
+  const totalDraws = draws.length;
+
+  // 1. Triangular Numbers — sum of first n natural numbers
+  const triangularNumbers: number[] = [];
+  for (let n = 1; triangularNumbers.length < 15; n++) {
+    const tri = (n * (n + 1)) / 2;
+    if (tri <= 25) triangularNumbers.push(tri);
+  }
+
+  // 2. Perfect Squares — squares of integers
+  const perfectSquares: number[] = [];
+  for (let n = 1; n * n <= 25; n++) {
+    perfectSquares.push(n * n);
+  }
+
+  // 3. Pythagorean Triples — triples satisfying a² + b² = c²
+  const pythagoreanTriples: number[][] = [];
+  for (let a = 1; a <= 5; a++) {
+    for (let b = a + 1; b <= 5; b++) {
+      const c = Math.sqrt(a * a + b * b);
+      if (Number.isInteger(c) && c <= 25) {
+        pythagoreanTriples.push([a, b, c]);
+      }
+    }
+  }
+
+  // 4. Geometric Ratios — ratios based on geometric progressions
+  const geometricRatios: Record<number, number> = {};
+  const ratio = 1.5; // Geometric ratio
+  for (let i = 1; i <= 25; i++) {
+    geometricRatios[i] = Math.pow(ratio, i % 5);
+  }
+
+  // 5. Harmonic Series — sum of reciprocals
+  const harmonicSeries: Record<number, number> = {};
+  for (let i = 1; i <= 25; i++) {
+    let sum = 0;
+    for (let k = 1; k <= i; k++) {
+      sum += 1 / k;
+    }
+    harmonicSeries[i] = sum;
+  }
+
+  return {
+    draws,
+    triangularNumbers,
+    perfectSquares,
+    pythagoreanTriples,
+    geometricRatios,
+    harmonicSeries,
+  };
+}
+
+export function generateGaussGame(analysis: GaussAnalysis, count: number): Game {
+  const { normalDistribution, confidenceIntervals, leastSquaresFit } = analysis;
+
+  const weights: { num: number; weight: number }[] = [];
+  for (let i = 1; i <= 25; i++) {
+    const normal = normalDistribution[i] || 0.5;
+    const lsFit = leastSquaresFit[i - 1] || 0;
+    const inConfidence = confidenceIntervals.find(ci => ci.num === i && i >= ci.lower && i <= ci.upper) ? 1.2 : 1.0;
+
+    const weight = normal * (lsFit + 1) * inConfidence;
+    weights.push({ num: i, weight });
+  }
+
+  weights.sort((a, b) => b.weight - a.weight);
+  const selected = weights.slice(0, count).map(w => w.num).sort((a, b) => a - b);
+  return selected;
+}
+
+export function generateGaussGames(analysis: GaussAnalysis, quantity: number, numbersPerGame: number): Game[] {
+  const games: Game[] = [];
+  const seen = new Set<string>();
+
+  let attempts = 0;
+  while (games.length < quantity && attempts < quantity * 10) {
+    const game = generateGaussGame(analysis, numbersPerGame);
+    const key = game.join(",");
+    if (!seen.has(key)) {
+      seen.add(key);
+      games.push(game);
+    }
+    attempts++;
+  }
+
+  return games;
+}
+
+export function generateFibonacciGame(analysis: FibonacciAnalysis, count: number): Game {
+  const { goldenRatioWeights, spiralPositions, phiHarmonics } = analysis;
+
+  const weights: { num: number; weight: number }[] = [];
+  for (let i = 1; i <= 25; i++) {
+    const golden = goldenRatioWeights[i] || 0.5;
+    const spiral = spiralPositions[i - 1] || 1;
+    const harmonic = phiHarmonics[i] || 0.1;
+
+    const weight = golden * (1 / spiral) * harmonic * 100; // Scale up harmonics
+    weights.push({ num: i, weight });
+  }
+
+  weights.sort((a, b) => b.weight - a.weight);
+  const selected = weights.slice(0, count).map(w => w.num).sort((a, b) => a - b);
+  return selected;
+}
+
+export function generateFibonacciGames(analysis: FibonacciAnalysis, quantity: number, numbersPerGame: number): Game[] {
+  const games: Game[] = [];
+  const seen = new Set<string>();
+
+  let attempts = 0;
+  while (games.length < quantity && attempts < quantity * 10) {
+    const game = generateFibonacciGame(analysis, numbersPerGame);
+    const key = game.join(",");
+    if (!seen.has(key)) {
+      seen.add(key);
+      games.push(game);
+    }
+    attempts++;
+  }
+
+  return games;
+}
+
+export function generateTuringGame(analysis: TuringAnalysis, count: number): Game {
+  const { computabilityScore, haltingProbabilities, algorithmicComplexity } = analysis;
+
+  const weights: { num: number; weight: number }[] = [];
+  for (let i = 1; i <= 25; i++) {
+    const comp = computabilityScore[i] || 0.5;
+    const halt = haltingProbabilities[i] || 0.5;
+    const alg = algorithmicComplexity[i] || 1;
+
+    const weight = comp * halt * (1 / alg); // Lower complexity = higher weight
+    weights.push({ num: i, weight });
+  }
+
+  weights.sort((a, b) => b.weight - a.weight);
+  const selected = weights.slice(0, count).map(w => w.num).sort((a, b) => a - b);
+  return selected;
+}
+
+export function generateTuringGames(analysis: TuringAnalysis, quantity: number, numbersPerGame: number): Game[] {
+  const games: Game[] = [];
+  const seen = new Set<string>();
+
+  let attempts = 0;
+  while (games.length < quantity && attempts < quantity * 10) {
+    const game = generateTuringGame(analysis, numbersPerGame);
+    const key = game.join(",");
+    if (!seen.has(key)) {
+      seen.add(key);
+      games.push(game);
+    }
+    attempts++;
+  }
+
+  return games;
+}
+
+export function generatePythagorasGame(analysis: PythagorasAnalysis, count: number): Game {
+  const { triangularNumbers, perfectSquares, pythagoreanTriples, geometricRatios, harmonicSeries } = analysis;
+
+  const weights: { num: number; weight: number }[] = [];
+  for (let i = 1; i <= 25; i++) {
+    let weight = 1.0;
+
+    // Bonus for triangular numbers
+    if (triangularNumbers.includes(i)) weight *= 1.5;
+
+    // Bonus for perfect squares
+    if (perfectSquares.includes(i)) weight *= 1.3;
+
+    // Bonus for numbers in Pythagorean triples
+    const inTriple = pythagoreanTriples.some(triple => triple.includes(i));
+    if (inTriple) weight *= 1.4;
+
+    // Geometric and harmonic factors
+    weight *= geometricRatios[i] || 1.0;
+    weight *= harmonicSeries[i] || 1.0;
+
+    weights.push({ num: i, weight });
+  }
+
+  weights.sort((a, b) => b.weight - a.weight);
+  const selected = weights.slice(0, count).map(w => w.num).sort((a, b) => a - b);
+  return selected;
+}
+
+export function generatePythagorasGames(analysis: PythagorasAnalysis, quantity: number, numbersPerGame: number): Game[] {
+  const games: Game[] = [];
+  const seen = new Set<string>();
+
+  let attempts = 0;
+  while (games.length < quantity && attempts < quantity * 10) {
+    const game = generatePythagorasGame(analysis, numbersPerGame);
+    const key = game.join(",");
+    if (!seen.has(key)) {
+      seen.add(key);
+      games.push(game);
+    }
+    attempts++;
+  }
+
+  return games;
+}

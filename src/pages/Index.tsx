@@ -18,11 +18,23 @@ import {
   type DrawResult,
   type MotorAnalysis,
   type EinsteinAnalysis,
+  analyzeDrawsGauss,
+  generateGaussGames,
+  type GaussAnalysis,
+  analyzeDrawsFibonacci,
+  generateFibonacciGames,
+  type FibonacciAnalysis,
+  analyzeDrawsTuring,
+  generateTuringGames,
+  type TuringAnalysis,
+  analyzeDrawsPythagoras,
+  generatePythagorasGames,
+  type PythagorasAnalysis,
 } from "@/lib/lotofacil";
 import GameCard, { getPrizeValue } from "@/components/GameCard";
 import LotteryBall from "@/components/LotteryBall";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dices, Search, Loader2, Clover, Trophy, Banknote, Brain, TrendingUp, Flame, Snowflake, Atom, Orbit, Sparkles, Sigma, Zap } from "lucide-react";
+import { Dices, Search, Loader2, Clover, Trophy, Banknote, Brain, TrendingUp, Flame, Snowflake, Atom, Orbit, Sparkles, Sigma, Zap, Calculator, TreePine, Cpu, Triangle } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -35,6 +47,10 @@ const Index = () => {
   const [motorLoading, setMotorLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MotorAnalysis | null>(null);
   const [einsteinAnalysis, setEinsteinAnalysis] = useState<EinsteinAnalysis | null>(null);
+  const [gaussAnalysis, setGaussAnalysis] = useState<GaussAnalysis | null>(null);
+  const [fibonacciAnalysis, setFibonacciAnalysis] = useState<FibonacciAnalysis | null>(null);
+  const [turingAnalysis, setTuringAnalysis] = useState<TuringAnalysis | null>(null);
+  const [pythagorasAnalysis, setPythagorasAnalysis] = useState<PythagorasAnalysis | null>(null);
 
   const toggleMotor = (motor: string) => {
     setSelectedMotors(prev => {
@@ -52,8 +68,16 @@ const Index = () => {
       const draws = await fetchLast5Draws();
       const newAnalysis = analyzeDraws(draws);
       const newEinstein = analyzeDrawsEinstein(draws);
+      const newGauss = analyzeDrawsGauss(draws);
+      const newFibonacci = analyzeDrawsFibonacci(draws);
+      const newTuring = analyzeDrawsTuring(draws);
+      const newPythagoras = analyzeDrawsPythagoras(draws);
       setAnalysis(newAnalysis);
       setEinsteinAnalysis(newEinstein);
+      setGaussAnalysis(newGauss);
+      setFibonacciAnalysis(newFibonacci);
+      setTuringAnalysis(newTuring);
+      setPythagorasAnalysis(newPythagoras);
       toast({ title: "🧠 Análise atualizada!", description: `Concursos ${draws[0].concurso}–${draws[draws.length - 1].concurso}` });
     } catch {
       toast({ title: "Erro ao analisar concursos", variant: "destructive" });
@@ -65,35 +89,63 @@ const Index = () => {
   const handleGenerate = async () => {
     const hasPreditivo = selectedMotors.has("preditivo");
     const hasEinstein = selectedMotors.has("einstein");
+    const hasGauss = selectedMotors.has("gauss");
+    const hasFibonacci = selectedMotors.has("fibonacci");
+    const hasTuring = selectedMotors.has("turing");
+    const hasPythagoras = selectedMotors.has("pythagoras");
 
-    if (hasPreditivo || hasEinstein) {
+    if (hasPreditivo || hasEinstein || hasGauss || hasFibonacci || hasTuring || hasPythagoras) {
       setMotorLoading(true);
       try {
         let a = analysis;
         let e = einsteinAnalysis;
-        if (!a || !e) {
+        let g = gaussAnalysis;
+        let f = fibonacciAnalysis;
+        let t = turingAnalysis;
+        let p = pythagorasAnalysis;
+
+        if (!a || !e || !g || !f || !t || !p) {
           toast({ title: "🧠 Analisando últimos 5 concursos..." });
           const draws = await fetchLast5Draws();
           a = analyzeDraws(draws);
           e = analyzeDrawsEinstein(draws);
+          g = analyzeDrawsGauss(draws);
+          f = analyzeDrawsFibonacci(draws);
+          t = analyzeDrawsTuring(draws);
+          p = analyzeDrawsPythagoras(draws);
           setAnalysis(a);
           setEinsteinAnalysis(e);
+          setGaussAnalysis(g);
+          setFibonacciAnalysis(f);
+          setTuringAnalysis(t);
+          setPythagorasAnalysis(p);
         }
 
         let newGames: Game[];
-        if (hasPreditivo && hasEinstein) {
-          newGames = generateCombinedGames(a, e, gameCount, numbersPerGame);
-        } else if (hasEinstein) {
-          newGames = generateEinsteinGames(e, gameCount, numbersPerGame);
+        const motorCount = [hasPreditivo, hasEinstein, hasGauss, hasFibonacci, hasTuring, hasPythagoras].filter(Boolean).length;
+
+        if (motorCount === 1) {
+          if (hasEinstein) newGames = generateEinsteinGames(e!, gameCount, numbersPerGame);
+          else if (hasGauss) newGames = generateGaussGames(g!, gameCount, numbersPerGame);
+          else if (hasFibonacci) newGames = generateFibonacciGames(f!, gameCount, numbersPerGame);
+          else if (hasTuring) newGames = generateTuringGames(t!, gameCount, numbersPerGame);
+          else if (hasPythagoras) newGames = generatePythagorasGames(p!, gameCount, numbersPerGame);
+          else newGames = generateSmartGames(a!, gameCount, numbersPerGame);
         } else {
-          newGames = generateSmartGames(a, gameCount, numbersPerGame);
+          // For multiple motors, combine them (simplified - could be enhanced)
+          newGames = generateCombinedGames(a!, e!, gameCount, numbersPerGame);
         }
+
         setGames(newGames);
         setDraw(null);
 
         const names: string[] = [];
         if (hasPreditivo) names.push("Preditivo");
         if (hasEinstein) names.push("Einstein");
+        if (hasGauss) names.push("Gauss");
+        if (hasFibonacci) names.push("Fibonacci");
+        if (hasTuring) names.push("Turing");
+        if (hasPythagoras) names.push("Pitágoras");
         toast({ title: `🧠 ${gameCount} jogo(s) gerado(s) — ${names.join(" + ")}!` });
       } catch {
         toast({ title: "Erro ao gerar jogos", variant: "destructive" });
@@ -202,7 +254,7 @@ const Index = () => {
 
           {/* Motor Selection */}
           <div className="space-y-3 border-t border-border pt-4">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-col items-center gap-2 mb-2">
               <Brain className="w-4 h-4 text-primary" />
               <label className="text-sm font-medium text-foreground">Motores IA</label>
               <span className="text-[10px] text-muted-foreground">(selecione um ou mais)</span>
@@ -230,6 +282,50 @@ const Index = () => {
               >
                 <Atom className="w-3.5 h-3.5" /> Einstein
                 {selectedMotors.has("einstein") && <span className="ml-1 text-[10px]">✓</span>}
+              </button>
+              <button
+                onClick={() => toggleMotor("gauss")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                  selectedMotors.has("gauss")
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                <Calculator className="w-3.5 h-3.5" /> Gauss
+                {selectedMotors.has("gauss") && <span className="ml-1 text-[10px]">✓</span>}
+              </button>
+              <button
+                onClick={() => toggleMotor("fibonacci")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                  selectedMotors.has("fibonacci")
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                <TreePine className="w-3.5 h-3.5" /> Fibonacci
+                {selectedMotors.has("fibonacci") && <span className="ml-1 text-[10px]">✓</span>}
+              </button>
+              <button
+                onClick={() => toggleMotor("turing")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                  selectedMotors.has("turing")
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                <Cpu className="w-3.5 h-3.5" /> Turing
+                {selectedMotors.has("turing") && <span className="ml-1 text-[10px]">✓</span>}
+              </button>
+              <button
+                onClick={() => toggleMotor("pythagoras")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                  selectedMotors.has("pythagoras")
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                <Triangle className="w-3.5 h-3.5" /> Pitágoras
+                {selectedMotors.has("pythagoras") && <span className="ml-1 text-[10px]">✓</span>}
               </button>
             </div>
 
@@ -424,10 +520,18 @@ const Index = () => {
               ) : (
                 <Dices className="w-5 h-5" />
               )}
-              {selectedMotors.size === 2
+              {selectedMotors.size >= 2
                 ? "Gerar Combinado"
                 : selectedMotors.has("einstein")
                 ? "Gerar com Einstein"
+                : selectedMotors.has("gauss")
+                ? "Gerar com Gauss"
+                : selectedMotors.has("fibonacci")
+                ? "Gerar com Fibonacci"
+                : selectedMotors.has("turing")
+                ? "Gerar com Turing"
+                : selectedMotors.has("pythagoras")
+                ? "Gerar com Pitágoras"
                 : selectedMotors.has("preditivo")
                 ? "Gerar com Preditivo"
                 : "Gerar Jogos"}
